@@ -39,10 +39,37 @@ class Blockchain:
             if not self.valid_proof(last_block['proof'], block['proof']):
                 return False
 
+
             last_block = block
             current_index += 1
 
         return True
+
+    def resolve_conflicts(self):
+        """
+        Consensus Algorithm, it resolves conflits by replaing our chain with the longest one in the network
+        """
+        neighbours = self.nodes
+        new_chain = None
+
+        # Looking for chains longer than ours
+        max_length = len(self.chain)
+
+        # Grab and verify the chains from all the nodes in our network
+        for node in neighbours:
+            response = request.get(f'http://{node}/chain')
+
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+
+                # Check if the length is longer and the chain is valid
+                if length > max_length and self.valid_chain(chain):
+                    max_length = length
+                    new_chain = chain
+
+        # Replace our chain if we discovered a new, valid chain longer than ours
+        
 
     def register_node(self, address):
         """
